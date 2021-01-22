@@ -1,9 +1,10 @@
 from arango import ArangoClient
 import csv
+import shutil
+from tempfile import NamedTemporaryFile
 
 
-def startFunction(rank,server,y_start,m_start,d_start,y_stop,m_stop,d_stop,limit_champions):
-
+def startFunction(rank, server, y_start, m_start, d_start, y_stop, m_stop, d_stop, limit_champions, list_champions):
     client = ArangoClient(hosts='http://k53.pietryga.info:8529')
     db = client.db('Riot', username='adam', password='moraipraktyki321')
     # Execute an AQL query and iterate through the result cursor.
@@ -51,7 +52,6 @@ def startFunction(rank,server,y_start,m_start,d_start,y_stop,m_stop,d_stop,limit
         FILTER COUNT_DISTINCT(goodAliases) > 1
         //COLLECT WITH COUNT INTO games
         //RETURN games
-        
         let pp = m.participants
         for i in range(0, 9)
         //filter goodAliases[i] != null
@@ -70,14 +70,15 @@ def startFunction(rank,server,y_start,m_start,d_start,y_stop,m_stop,d_stop,limit
 
     # Ustawienie czasu/rankingu na jakim
 
-    cursor = db.aql.execute(query_str, bind_vars={'LEAGUE': rank, 'server': server,'year_start': y_start,
-                                                  'month_start': m_start, 'day_start': d_start, 'year_stop': y_stop, 'month_stop': m_stop,
+    cursor = db.aql.execute(query_str, bind_vars={'LEAGUE': rank, 'server': server, 'year_start': y_start,
+                                                  'month_start': m_start, 'day_start': d_start, 'year_stop': y_stop,
+                                                  'month_stop': m_stop,
                                                   'day_stop': d_stop, 'LIMIT_CHAMPIONS': limit_champions})
     match_servers = [document for document in cursor]
 
     # Możemy ustawić dokladniejsza nazwe pliku jeśli istnieje taka potrzeba
-
-    with open('most_piccked_champs_OPT_'+ server + '_' + rank + '.csv', 'w', encoding='utf-8', newline='') as csvfile:
+    filename = "most_piccked_champs_OPT_" + server + '_' + rank + ".csv"
+    with open(filename, 'w', encoding='utf-8', newline='') as csvfile:
         fieldnames = ['piccked champion id', 'count', 'from', 'to', 'server', 'league']
         csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
         csvwriter.writeheader()
@@ -91,7 +92,23 @@ def startFunction(rank,server,y_start,m_start,d_start,y_stop,m_stop,d_stop,limit
 
         for match in match_servers:
             csvwriter.writerow(match)
+    csvfile.close()
+    temp_file = NamedTemporaryFile(delete=False)
+    with open(filename, "rb") as csvfile, temp_file:
+        reader = csv.DictReader(csvfile)
+        fieldnames = ['champion name', 'piccked champion id', 'count', 'from', 'to', 'server', 'league']
+        writer = csv.DictWriter(temp_file, fieldnames=fieldnames)
+        #writer.writeheader()
+        for row in reader:
+            print(row)
+            writer.writerow({
+                "champion name": list_champions[row["piccked champion id"]],
+                "piccked champion id": row["piccked champion id"],
+                "count": row["count"],
+                "from": row["from"],
+                "to": row["to"],
+                "server": row["server"],
+                "league": row["league"]
+            })
+
     return 0
-
-
-
