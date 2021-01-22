@@ -8,8 +8,7 @@ import win_ratios_OPT
 import glob
 from pyexcel.cookbook import merge_all_to_a_book
 
-#jeśli jest taka potrzeba moge dodać definiowanie wszystkich zmiennych w tym pliku, dzięki czemu nie będzie trzeba wchodzić w pojedyncze pliki by zmieniac zmienne
-
+#Dane ogólne
 rank = 'challenger'
 server = 'kr'
 y_start = 2020
@@ -18,6 +17,8 @@ d_start = 10
 y_stop = 2020
 m_stop = 11
 d_stop = 30
+
+#Dane do poszczególny funkcji
 
 domowe.startFunction(y_start,m_start,d_start,y_stop,m_stop,d_stop)
 
