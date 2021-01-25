@@ -65,7 +65,7 @@ def startFunction(rank,server,y_start,m_start,d_start,y_stop,m_stop,d_stop):
            COLLECT  bannedChampionId =  ban.championId WITH COUNT INTO freq
             SORT freq desc
             RETURN {
-             "banned champion id" : bannedChampionId,
+             "banned champion" : Document("Champion", TO_STRING(bannedChampionId)).name ,
              "count" : freq
             }
     """
@@ -75,7 +75,7 @@ def startFunction(rank,server,y_start,m_start,d_start,y_stop,m_stop,d_stop):
     match_servers = [document for document in cursor]
 
     with open('most_banned_champs_OPT_'+ server + '_' + rank + '.csv', 'w', encoding='utf-8', newline='') as csvfile:
-        fieldnames = ['banned champion id', 'count', 'from', 'to', 'server', 'league']
+        fieldnames = ['banned champion', 'count', 'from', 'to', 'server', 'league']
         csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
         csvwriter.writeheader()
 

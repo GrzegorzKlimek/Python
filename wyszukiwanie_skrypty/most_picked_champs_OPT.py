@@ -4,7 +4,7 @@ import shutil
 from tempfile import NamedTemporaryFile
 
 
-def startFunction(rank, server, y_start, m_start, d_start, y_stop, m_stop, d_stop, limit_champions, list_champions):
+def startFunction(rank, server, y_start, m_start, d_start, y_stop, m_stop, d_stop, limit_champions):
     client = ArangoClient(hosts='http://k53.pietryga.info:8529')
     db = client.db('Riot', username='adam', password='moraipraktyki321')
     # Execute an AQL query and iterate through the result cursor.
@@ -61,7 +61,7 @@ def startFunction(rank, server, y_start, m_start, d_start, y_stop, m_stop, d_sto
             SORT length desc
             LIMIT @LIMIT_CHAMPIONS
             RETURN {
-             "piccked champion id" : picckedChampionId,
+             "piccked champion" :  Document("Champion", TO_STRING(picckedChampionId)).name,
              "count" : length
             }
         
@@ -79,7 +79,7 @@ def startFunction(rank, server, y_start, m_start, d_start, y_stop, m_stop, d_sto
     # Możemy ustawić dokladniejsza nazwe pliku jeśli istnieje taka potrzeba
     filename = "most_piccked_champs_OPT_" + server + '_' + rank + ".csv"
     with open(filename, 'w', encoding='utf-8', newline='') as csvfile:
-        fieldnames = ['piccked champion id', 'count', 'from', 'to', 'server', 'league']
+        fieldnames = ['piccked champion', 'count', 'from', 'to', 'server', 'league']
         csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
         csvwriter.writeheader()
 
@@ -92,23 +92,4 @@ def startFunction(rank, server, y_start, m_start, d_start, y_stop, m_stop, d_sto
 
         for match in match_servers:
             csvwriter.writerow(match)
-    csvfile.close()
-    temp_file = NamedTemporaryFile(delete=False)
-    with open(filename, "rb") as csvfile, temp_file:
-        reader = csv.DictReader(csvfile)
-        fieldnames = ['champion name', 'piccked champion id', 'count', 'from', 'to', 'server', 'league']
-        writer = csv.DictWriter(temp_file, fieldnames=fieldnames)
-        #writer.writeheader()
-        for row in reader:
-            print(row)
-            writer.writerow({
-                "champion name": list_champions[row["piccked champion id"]],
-                "piccked champion id": row["piccked champion id"],
-                "count": row["count"],
-                "from": row["from"],
-                "to": row["to"],
-                "server": row["server"],
-                "league": row["league"]
-            })
-
     return 0
